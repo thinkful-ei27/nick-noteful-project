@@ -4,71 +4,109 @@ const express = require('express');
 
 // Simple In-Memory Database
 const data = require('./db/notes');
+const simDB = require('./db/simDB');
+const notes = simDB.initialize(data);
+
+const logger = require('./middleware/logger');
+const { PORT } = require('./config');
 
 // Create an Express application
 const app = express();
 
+// Log all requests
+app.use(logger);
+
 // Create a static webserver
 app.use(express.static('public'));
 
+// Parse request body
+app.use(express.json());
+
 // Get All (and search by query)
-app.get('/api/notes', (req, res) => {
+app.get('/api/notes', (req, res, next) => {
+  const { searchTerm } = req.query;
 
-  // Basic JSON response (data is an array of objects)
-  // res.json(data);
-
-  /**
-   * Implement Search
-   * Below are 2 solutions: verbose and terse. They are functionally identical but use different syntax
-   *
-   * Destructure the query string property in to `searchTerm` constant
-   * If searchTerm exists...
-   * then `filter` the data array where title `includes` the searchTerm value
-   * otherwise return `data` unfiltered
-   */
-
-  /**
-   * Verbose solution
-   */
-  const searchTerm = req.query.searchTerm;
-  if (searchTerm) {
-    let filteredList = data.filter(function(item) {
-      return item.title.includes(searchTerm);
-    });
-    res.json(filteredList);
-  } else {
-    res.json(data);
-  }
-
-  /**
-   * Terse solution
-   */
-  // const { searchTerm } = req.query;
-  // res.json(searchTerm ? data.filter(item => item.title.includes(searchTerm)) : data);
-
+  notes.filter(searchTerm, (err, list) => {
+    if (err) {
+      return next(err);
+    }
+    res.json(list);
+  });
 });
 
 // Get a single item
-app.get('/api/notes/:id', (req, res) => {
+app.get('/api/notes/:id', (req, res, next) => {
   const id = req.params.id;
 
-  /**
-   * Verbose solution
-   */
-  let note = data.find(function(item) {
-    return item.id === Number(id);
+  notes.find(id, (err, item) => {
+    if (err) {
+      return next(err);
+    }
+    if (item) {
+      res.json(item);
+    } else {
+      next();
+    }
   });
-  res.json(note);
+});
 
-  /**
-   * Terse solution
-   */
-  // res.json(data.find(item => item.id === Number(id)));
+// Put update an item
+app.put('/api/notes/:id', (req, res, next) => {
+  const id = req.params.id;
 
+  /***** Never trust users - validate input *****/
+  const updateObj = {};
+  const updateableFields = ['title', 'content'];
+
+  updateableFields.forEach(field => {
+    if (field in req.body) {
+      updateObj[field] = req.body[field];
+    }
+  });
+
+  /***** Never trust users - validate input *****/
+  if (!updateObj.title) {
+    const err = new Error('Missing `title` in request body');
+    err.status = 400;
+    return next(err);
+  }
+
+  notes.update(id, updateObj, (err, item) => {
+    if (err) {
+      return next(err);
+    }
+    if (item) {
+      res.json(item);
+    } else {
+      next();
+    }
+  });
+});
+
+// DEMO ONLY: brute-force way to test our error handler
+app.get('/throw', (req, res, next) => {
+  throw new Error('Boom!!');
+});
+
+// Catch-all 404
+app.use(function (req, res, next) {
+  const err = new Error('Not Found');
+  err.status = 404;
+  next(err);
+});
+
+// Catch-all Error handler
+// NOTE: we'll prevent stacktrace leak in later exercise
+app.use(function (err, req, res, next) {
+  res.status(err.status || 500);
+  res.json({
+    message: err.message,
+    error: err
+  });
 });
 
 // Listen for incoming connections
-app.listen(8080, function () {
+app.listen(PORT, function () {
   console.info(`Server listening on ${this.address().port}`);
 }).on('error', err => {
   console.error(err);
