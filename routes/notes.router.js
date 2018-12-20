@@ -112,12 +112,22 @@ router.post('/notes', (req, res, next) => {
 router.delete('/notes/:id', (req, res, next) => {
   const id = req.params.id;
 
-  notes.delete(id, (err) => {
+  notes.delete(id)
+    .then(item => {
+      res.sendStatus(204);
+    })
+    .catch(err => {
+      next(err);
+    });
+});
+    
+/* Unpromisfied version
+    , (err) => {
     if (err) {
       return next(err);
     }
     res.sendStatus(204);
-  });
-});
+  }); 
+}); */
 
 module.exports = router;
