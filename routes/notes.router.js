@@ -62,7 +62,17 @@ router.put('/notes/:id', (req, res, next) => {
     return next(err);
   }
 
-  notes.update(id, updateObj, (err, item) => {
+  notes.update(id, updateObj) 
+    .then(item => {
+      if(item){
+        res.json(item);
+      } else {
+        next();
+      }})
+    .catch(err => {
+      next(err);
+    });
+  /*(err, item) => {
     if (err) {
       return next(err);
     }
@@ -71,7 +81,7 @@ router.put('/notes/:id', (req, res, next) => {
     } else {
       next();
     }
-  });
+  });*/
 });
 
 // Post (insert) an item
