@@ -33,6 +33,7 @@ app.use(function (req, res, next) {
 // Catch-all Error handler
 // NOTE: we'll prevent stacktrace leak in later exercise
 app.use(function (err, req, res, next) {
+  console.log(err);
   res.status(err.status || 500);
   res.json({
     message: err.message,
