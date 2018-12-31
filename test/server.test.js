@@ -56,9 +56,30 @@ describe('Get /API/notes test', function () {
         expect(res.body).to.be.an('array');
         for(let x = 0; x < res.body.length; x++){
           expect(res.body[x]).to.be.an('object');
-          expect(res.body[x]).to.have.keys(["content", "id", "title"]);
+          expect(res.body[x]).to.have.keys(['content', 'id', 'title']);
         }
-        //console.log(res.body);
+        //Does not check for correct search results or return an empty array
+      });
+  });
+});
+
+describe('Get /api/notes/:id', function(){
+
+  it('should return the correct note object with id, title, and content', function(){
+    return chai.request(app)
+      .get('/api/notes/1007')
+      .then(function(res){
+        expect(res).to.have.status(200);
+        expect(res.body).to.be.an('object');
+        expect(res.body).to.have.keys(['content', 'id', 'title']);
+        expect(res.body.id).to.equal(1007);
+      });
+  });
+  it('should return 404 as the id does not exist', function() {
+    return chai.request(app)
+      .get('/api/notes/1111')
+      .then(function(res){
+        expect(res).to.have.status(404);
       });
   });
 });
