@@ -83,3 +83,68 @@ describe('Get /api/notes/:id', function(){
       });
   });
 });
+
+describe('Post api/notes', function(){
+
+  it('should create and return new item with location header when provided valid data', function(){
+    const testItem = {'title': 'Meowfing but trouble', 'content': 'Horror Noir for Cats'};
+    return chai.request(app)
+      .post('/api/notes')
+      .send(testItem)
+      .then(function(res){
+        expect(res).to.have.status(201);
+        expect(res.body).to.have.keys(['content', 'id', 'title']);
+        expect(res.body.title).to.equal(testItem.title);
+        expect(res.body.content).to.equal(testItem.content);
+      });
+  });
+  it('should return an object with a message "Missing Title" in request body when missing title', function(){
+    const testItem ={'content': 'I forgot a title!'};
+    return chai.request(app)
+      .post('/api/notes')
+      .send(testItem)
+      .then(function(res){
+        expect(res).to.have.status(400);
+        expect(res.body.message).to.equal('Missing `title` in request body');
+      });
+  });
+});
+
+describe('Put /api/notes/:id', function(){
+
+  it('should update and return a note object when given valid data', function(){
+    const testItem = {'title': 'I updated the title', 'content': 'I updated the content'};
+    return chai.request(app)
+      .put('/api/notes/1002')
+      .send(testItem)
+      .then(function(res){
+        expect(res).to.have.status(200);
+        expect(res.body).to.be.an('object');
+        expect(res.body).to.have.keys(['content', 'id', 'title']);
+        expect(res.body.content).to.equal('I updated the content');
+        expect(res.body.title).to.equal('I updated the title');
+        expect(res.body.id).to.equal(1002);
+      });
+  });
+
+  it('should respond with 404 status when given an invalid id', function(){
+    const testItem = {'title': 'test title', 'content': 'test content'};
+    return chai.request(app)
+      .put('/api/notes/1111')
+      .send(testItem)
+      .then(function(res){
+        expect(res).to.have.status(404);
+      });
+  });
+
+  it('should respond with a message "missing title in request body" when that is true', function(){
+    const testItem = {'content': 'test content'};
+    return chai.request(app)
+      .put('/api/notes/1002')
+      .send(testItem)
+      .then(function(res){
+        expect(res).to.have.status(400);
+        expect(res.body.message).to.equal('Missing `title` in request body');
+      });
+  });
+});
