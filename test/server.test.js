@@ -21,26 +21,44 @@ describe('Reality check', function () {
 
 describe('Express static', function () {
 
-    it('GET request "/" should return the index page', function () {
-      return chai.request(app)
-        .get('/')
-        .then(function (res) {
-          expect(res).to.exist;
-          expect(res).to.have.status(200);
-          expect(res).to.be.html;
-        });
-    });
-  
+  it('GET request "/" should return the index page', function () {
+    return chai.request(app)
+      .get('/')
+      .then(function (res) {
+        expect(res).to.exist;
+        expect(res).to.have.status(200);
+        expect(res).to.be.html;
+      });
   });
   
-  describe('404 handler', function () {
+});
   
-    it('should respond with 404 when given a bad path', function () {
-      return chai.request(app)
-        .get('/DOES/NOT/EXIST')
-        .then(res => {
-          expect(res).to.have.status(404);
-        });
-    });
+describe('404 handler', function () {
   
+  it('should respond with 404 when given a bad path', function () {
+    return chai.request(app)
+      .get('/DOES/NOT/EXIST')
+      .then(res => {
+        expect(res).to.have.status(404);
+      });
   });
+  
+});
+
+describe('Get /API/notes test', function () {
+    
+  it('should respond with an array of 10 objects with keys content, id, and title', function() {
+    return chai.request(app)
+      .get('/api/notes')
+      .then(function(res){
+        expect(res).to.have.status(200);
+        expect(res.body.length).to.equal(10);
+        expect(res.body).to.be.an('array');
+        for(let x = 0; x < res.body.length; x++){
+          expect(res.body[x]).to.be.an('object');
+          expect(res.body[x]).to.have.keys(["content", "id", "title"]);
+        }
+        //console.log(res.body);
+      });
+  });
+});
