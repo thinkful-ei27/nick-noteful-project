@@ -148,3 +148,22 @@ describe('Put /api/notes/:id', function(){
       });
   });
 });
+
+describe('Delete /api/notes/:id', function(){
+
+  it('should delete an item by id', function(){
+    return chai.request(app)
+      .delete('/api/notes/1004')
+      .then(function(res){
+        expect(res).to.have.status(204);
+      }); 
+  });
+
+  it('should not find deleted item', function(){
+    return chai.request(app)
+      .get('/api/notes/1004')
+      .then(function(res){
+        expect(res).to.have.status(404);
+      });
+  });
+});
